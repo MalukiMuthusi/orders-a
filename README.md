@@ -2,7 +2,7 @@
 
 This service handles CSV file, reads its data and then sends the data to the service [orders-b](https://github.com/MalukiMuthusi/orders-b)
 
-The service determines the order's country bases on the following REGEX
+The service determines the order's country based on the following REGEX
 
 | Country    | Code | REGEX                    |
 | ---------- | ---- | ------------------------ |
