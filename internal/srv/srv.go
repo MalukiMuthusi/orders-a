@@ -5,9 +5,11 @@ import (
 	"errors"
 	"io"
 	"os"
+	"regexp"
 
 	"github.com/MalukiMuthusi/orders-a/internal/logger"
 	"github.com/MalukiMuthusi/orders-a/internal/models"
+	"github.com/MalukiMuthusi/orders-a/internal/utils"
 )
 
 // Srv is a service to manage the csv records
@@ -18,8 +20,9 @@ type Srv interface {
 // Csv refers to a csv service that reads and decodes csv data
 type Csv struct{}
 
-// Read csv data and unmarshal the data
+// Read csv orders data and unmarshal the data
 func (s Csv) Read() ([]*models.Order, error) {
+	// TODO: provide a real path
 	f, err := os.Open("path")
 	if err != nil {
 
@@ -33,7 +36,12 @@ func (s Csv) Read() ([]*models.Order, error) {
 	csvReader := csv.NewReader(f)
 	var orders []*models.Order
 
-	for {
+	countryCodes, err := GetCountryCodes()
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; ; i++ {
 
 		record, err := csvReader.Read()
 		if errors.Is(err, io.EOF) {
@@ -45,6 +53,11 @@ func (s Csv) Read() ([]*models.Order, error) {
 			continue
 		}
 
+		// Skip the csv header
+		if i == 0 {
+			continue
+		}
+
 		order := &models.Order{
 			ID:           record[0],
 			Email:        record[1],
@@ -52,10 +65,75 @@ func (s Csv) Read() ([]*models.Order, error) {
 			ParcelWeight: record[3],
 		}
 
-		// TODO: determine the country from the phone number using the provided REGEX
+		// Get the country for the order, based on the phone number
+		country, err := Country(order.PhoneNumber, countryCodes)
+		if err != nil {
+			continue
+		}
+
+		order.Country = country
 
 		orders = append(orders, order)
 	}
 
 	return orders, nil
+}
+
+// GetCountryCodes returns a map of a country and its phone number REGEXP.
+// The values are provided through a csv file
+func GetCountryCodes() (map[string]string, error) {
+
+	// TODO: provide a real path
+	f, err := os.Open("path")
+	if err != nil {
+
+		logger.Log.Info(err)
+
+		return nil, err
+	}
+	defer f.Close()
+
+	csvReader := csv.NewReader(f)
+
+	countryCodes := make(map[string]string)
+
+	for i := 0; ; i++ {
+
+		record, err := csvReader.Read()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+
+		if err != nil {
+			logger.Log.Info(err)
+			continue
+		}
+
+		// Skip the csv header
+		if i == 0 {
+			continue
+		}
+
+		countryCodes[record[0]] = record[1]
+	}
+
+	return countryCodes, nil
+}
+
+// Country finds the REGEXP that matches the provided phone number
+func Country(phoneNumber string, countryCodes map[string]string) (*string, error) {
+
+	for k, v := range countryCodes {
+
+		matched, err := regexp.MatchString(v, phoneNumber)
+		if err != nil {
+			return nil, err
+		}
+
+		if matched {
+			return &k, nil
+		}
+	}
+
+	return nil, utils.ErrNoMatchForPhoneNumberRE
 }
