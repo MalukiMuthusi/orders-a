@@ -4,9 +4,9 @@ import (
 	"encoding/csv"
 	"errors"
 	"io"
-	"log"
 	"os"
 
+	"github.com/MalukiMuthusi/orders-a/internal/logger"
 	"github.com/MalukiMuthusi/orders-a/internal/models"
 )
 
@@ -22,7 +22,9 @@ type Csv struct{}
 func (s Csv) Read() ([]*models.Order, error) {
 	f, err := os.Open("path")
 	if err != nil {
-		// TODO: log error
+
+		logger.Log.Info(err)
+
 		return nil, err
 	}
 
@@ -39,7 +41,8 @@ func (s Csv) Read() ([]*models.Order, error) {
 		}
 
 		if err != nil {
-			log.Print(err)
+			logger.Log.Info(err)
+			continue
 		}
 
 		order := &models.Order{
