@@ -6,24 +6,30 @@ import (
 	"io"
 	"log"
 	"os"
+
+	"github.com/MalukiMuthusi/orders-a/internal/models"
 )
 
+// Srv is a service to manage the csv records
 type Srv interface {
-	Read() ([]byte, error)
+	Read() ([]*models.Order, error)
 }
 
+// Csv refers to a csv service that reads and decodes csv data
 type Csv struct{}
 
-func (s Csv) Read() error {
+// Read csv data and unmarshal the data
+func (s Csv) Read() ([]*models.Order, error) {
 	f, err := os.Open("path")
 	if err != nil {
 		// TODO: log error
-		return err
+		return nil, err
 	}
 
 	defer f.Close()
 
 	csvReader := csv.NewReader(f)
+	var orders []*models.Order
 
 	for {
 
@@ -36,6 +42,17 @@ func (s Csv) Read() error {
 			log.Print(err)
 		}
 
-		order := models.Order{}
+		order := &models.Order{
+			ID:           record[0],
+			Email:        record[1],
+			PhoneNumber:  record[2],
+			ParcelWeight: record[3],
+		}
+
+		// TODO: determine the country from the phone number using the provided REGEX
+
+		orders = append(orders, order)
 	}
+
+	return orders, nil
 }
