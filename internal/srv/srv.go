@@ -1,9 +1,12 @@
 package srv
 
 import (
+	"bytes"
 	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"io"
+	"net/http"
 	"os"
 	"regexp"
 	"strconv"
@@ -96,6 +99,32 @@ func (s Csv) ProcessOrders() ([]*models.Order, error) {
 	}
 
 	return orders, nil
+}
+
+// Send orders to service b to be saved
+func SendOrders(orders []*models.Order) error {
+
+	requestBody, err := json.Marshal(orders)
+	if err != nil {
+		logger.Log.Info(err)
+		return err
+	}
+
+	request, err := http.NewRequest(http.MethodPost, viper.GetString("ORDERS_POST"), bytes.NewBuffer(requestBody))
+	if err != nil {
+		logger.Log.Info(err)
+		return err
+	}
+
+	client := http.DefaultClient
+
+	_, err = client.Do(request)
+	if err != nil {
+
+		logger.Log.Info(err)
+	}
+
+	return nil
 }
 
 // GetCountryCodes returns a map of a country and its phone number REGEXP.
