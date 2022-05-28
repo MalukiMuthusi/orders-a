@@ -6,10 +6,12 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"strconv"
 
 	"github.com/MalukiMuthusi/orders-a/internal/logger"
 	"github.com/MalukiMuthusi/orders-a/internal/models"
 	"github.com/MalukiMuthusi/orders-a/internal/utils"
+	"github.com/spf13/viper"
 )
 
 // Srv is a service to manage the csv records
@@ -22,15 +24,14 @@ type Csv struct{}
 
 // Read csv orders data and unmarshal the data
 func (s Csv) Read() ([]*models.Order, error) {
-	// TODO: provide a real path
-	f, err := os.Open("path")
+
+	f, err := os.Open(viper.GetString(utils.OrdersPath))
 	if err != nil {
 
 		logger.Log.Info(err)
 
 		return nil, err
 	}
-
 	defer f.Close()
 
 	csvReader := csv.NewReader(f)
@@ -58,11 +59,27 @@ func (s Csv) Read() ([]*models.Order, error) {
 			continue
 		}
 
+		id, err := strconv.ParseUint(record[0], 10, 64)
+		if err != nil {
+
+			logger.Log.Info(err)
+
+			continue
+		}
+
+		parcelWeight, err := strconv.ParseFloat(record[3], 32)
+		if err != nil {
+
+			logger.Log.Info(err)
+
+			continue
+		}
+
 		order := &models.Order{
-			ID:           record[0],
+			ID:           id,
 			Email:        record[1],
 			PhoneNumber:  record[2],
-			ParcelWeight: record[3],
+			ParcelWeight: float32(parcelWeight),
 		}
 
 		// Get the country for the order, based on the phone number
@@ -83,8 +100,7 @@ func (s Csv) Read() ([]*models.Order, error) {
 // The values are provided through a csv file
 func GetCountryCodes() (map[string]string, error) {
 
-	// TODO: provide a real path
-	f, err := os.Open("path")
+	f, err := os.Open(viper.GetString(utils.CountryCodesPath))
 	if err != nil {
 
 		logger.Log.Info(err)

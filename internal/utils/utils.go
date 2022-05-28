@@ -10,3 +10,8 @@ const (
 var (
 	ErrNoMatchForPhoneNumberRE = errors.New("no match for the phone number REGEXP")
 )
+
+const (
+	CountryCodesPath = "COUNTRY_CODES_PATH"
+	OrdersPath       = "ORDERS_PATH"
+)
