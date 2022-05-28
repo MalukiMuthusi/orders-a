@@ -26,6 +26,31 @@ Uganda, `(256)\ ?\d{9}$`
 
 The application uses that data to determine the country of origin for an order based on its phone number
 
+## Configs
+
+Provide the following configurations
+
+```sh
+export ORDERS_COUNTRY_CODES_PATH="country_codes.csv"
+export ORDERS_ORDERS_PATH="test_file.csv"
+export ORDERS_ORDERS_POST_ENDPOINT="http://localhost:8080/batchsaveorders"
+
+# the following have default values, you can overwrite them
+export PORT=8080
+export ORDERS_PAGE_SIZE=100
+
+```
+
+## Process records
+
+To process the records provide the orders data in a csv file and provide a mapping of the country name to its phone number REGEX in also a csv file.
+
+Call the endpoint `process` the records will be read and sent to service b
+
+## Save orders
+
+The service sends the orders the orders in batches to service b to be saved.
+
 ## References
 
 [1]: https://pkg.go.dev/encoding/csv
