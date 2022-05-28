@@ -21,21 +21,21 @@ import (
 type Srv interface {
 
 	// ProcessOrders reads csv orders data and unmarshal the data
-	ProcessOrders() ([]*models.Order, error)
+	ProcessOrders() error
 }
 
 // Csv refers to a csv service that reads and decodes csv data
 type Csv struct{}
 
 // ProcessOrders reads csv orders data and unmarshal the data
-func (s Csv) ProcessOrders() ([]*models.Order, error) {
+func (s Csv) ProcessOrders() error {
 
 	f, err := os.Open(viper.GetString(utils.OrdersPath))
 	if err != nil {
 
 		logger.Log.Info(err)
 
-		return nil, err
+		return err
 	}
 	defer f.Close()
 
@@ -44,7 +44,7 @@ func (s Csv) ProcessOrders() ([]*models.Order, error) {
 
 	countryCodes, err := GetCountryCodes()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for i := 0; ; i++ {
@@ -96,9 +96,21 @@ func (s Csv) ProcessOrders() ([]*models.Order, error) {
 		order.Country = country
 
 		orders = append(orders, order)
+
+		if len(orders) == viper.GetInt(utils.PageSize) {
+			pagedOrders := make([]*models.Order, len(orders))
+
+			copy(pagedOrders, orders)
+
+			orders = nil
+
+			go SendOrders(pagedOrders)
+		}
 	}
 
-	return orders, nil
+	go SendOrders(orders)
+
+	return nil
 }
 
 // Send orders to service b to be saved
@@ -110,7 +122,7 @@ func SendOrders(orders []*models.Order) error {
 		return err
 	}
 
-	request, err := http.NewRequest(http.MethodPost, viper.GetString("ORDERS_POST"), bytes.NewBuffer(requestBody))
+	request, err := http.NewRequest(http.MethodPost, viper.GetString(utils.PostOrdersEndpoint), bytes.NewBuffer(requestBody))
 	if err != nil {
 		logger.Log.Info(err)
 		return err

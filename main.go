@@ -79,6 +79,7 @@ func init() {
 	BindEnvs()
 
 	viper.SetDefault(utils.Port, "8080")
+	viper.SetDefault(utils.PageSize, 100)
 
 	CheckMustBeSetEnvs()
 }
@@ -94,6 +95,10 @@ func BindEnvs() {
 	// path to a csv file with orders data
 	viper.BindEnv(utils.OrdersPath)
 
+	viper.BindEnv(utils.PostOrdersEndpoint)
+
+	viper.BindEnv(utils.PageSize)
+
 }
 
 func EnvMustBeSet(key string) {
@@ -107,6 +112,7 @@ func CheckMustBeSetEnvs() {
 
 	EnvMustBeSet(utils.CountryCodesPath)
 	EnvMustBeSet(utils.OrdersPath)
+	EnvMustBeSet(utils.PostOrdersEndpoint)
 }
 
 // DebugPrintRoute prints the available API endpoints

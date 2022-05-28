@@ -12,6 +12,8 @@ var (
 )
 
 const (
-	CountryCodesPath = "COUNTRY_CODES_PATH"
-	OrdersPath       = "ORDERS_PATH"
+	CountryCodesPath   = "COUNTRY_CODES_PATH"
+	OrdersPath         = "ORDERS_PATH"
+	PostOrdersEndpoint = "ORDERS_POST"
+	PageSize           = "PAGE_SIZE"
 )
