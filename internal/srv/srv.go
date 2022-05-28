@@ -16,14 +16,16 @@ import (
 
 // Srv is a service to manage the csv records
 type Srv interface {
-	Read() ([]*models.Order, error)
+
+	// ProcessOrders reads csv orders data and unmarshal the data
+	ProcessOrders() ([]*models.Order, error)
 }
 
 // Csv refers to a csv service that reads and decodes csv data
 type Csv struct{}
 
-// Read csv orders data and unmarshal the data
-func (s Csv) Read() ([]*models.Order, error) {
+// ProcessOrders reads csv orders data and unmarshal the data
+func (s Csv) ProcessOrders() ([]*models.Order, error) {
 
 	f, err := os.Open(viper.GetString(utils.OrdersPath))
 	if err != nil {
